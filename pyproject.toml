@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alfa-rt3070"
+version = "0.1.0"
+description = "Experimental native macOS RT3070 Wi-Fi station driver"
+requires-python = ">=3.13"
+license = "GPL-2.0-only"
+dependencies = [
+  "wifit3 @ git+https://github.com/derv82/wifit3.git@053645ff19a82b9aa8430c687cc502405e6afc4c",
+  "cryptography==50.0.1",
+]
+
+[project.scripts]
+alfa = "alfa_rt3070.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>AlfaEthernetDriver</string>
+	<key>CFBundleIdentifier</key>
+	<string>io.github.clucas.AlfaWiFi.Driver</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>ALFA Wi-Fi Driver</string>
+	<key>CFBundlePackageType</key>
+	<string>DEXT</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>IOKitPersonalities</key>
+	<dict>
+		<key>AlfaEthernetDriver</key>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>io.github.clucas.AlfaWiFi.Driver</string>
+			<key>CFBundleIdentifierKernel</key>
+			<string>com.apple.iokit.IOSkywalkFamily</string>
+			<key>IOClass</key>
+			<string>IOUserNetworkEthernet</string>
+			<key>IOMatchCategory</key>
+			<string>io.github.clucas.AlfaWiFi.Driver</string>
+			<key>IOProbeScore</key>
+			<integer>100000</integer>
+			<key>IOProviderClass</key>
+			<string>IOUserResources</string>
+			<key>IOResourceMatch</key>
+			<string>IOKit</string>
+			<key>IOUserClass</key>
+			<string>AlfaEthernetDriver</string>
+			<key>IOUserServerName</key>
+			<string>io.github.clucas.AlfaWiFi.Driver</string>
+			<key>ControlProperties</key>
+			<dict>
+				<key>IOClass</key>
+				<string>IOUserService</string>
+				<key>IOUserClass</key>
+				<string>AlfaControlService</string>
+				<key>UserClientProperties</key>
+				<dict>
+					<key>IOClass</key>
+					<string>IOUserUserClient</string>
+					<key>IOUserClass</key>
+					<string>AlfaEthernetUserClient</string>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+	<key>OSBundleLibraries</key>
+	<dict>
+		<key>com.apple.iokit.IOSkywalkFamily</key>
+		<string>1.0</string>
+	</dict>
+	<key>OSBundleRequired</key>
+	<string>DriverKit</string>
+	<key>OSBundleUsageDescription</key>
+	<string>Connect your ALFA USB Wi-Fi adapter as a network service.</string>
+</dict>
+</plist>

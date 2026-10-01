@@ -1,0 +1,35 @@
+#ifndef ALFA_ETHERNET_DRIVER_IIG
+#define ALFA_ETHERNET_DRIVER_IIG
+
+#include <NetworkingDriverKit/IOUserNetworkEthernet.iig>
+#include <DriverKit/IOUserClient.iig>
+#include "AlfaProtocol.h"
+
+class AlfaEthernetDriver : public IOUserNetworkEthernet {
+public:
+    virtual bool init() override;
+    virtual void free() override;
+    virtual kern_return_t Start(IOService *provider) override;
+    virtual kern_return_t Stop(IOService *provider) override;
+    virtual kern_return_t SetInterfaceEnable(bool enable) override;
+    virtual kern_return_t SetMTU(uint32_t mtu) override;
+    virtual kern_return_t GetMaxTransferUnit(uint32_t *mtu) override;
+    virtual kern_return_t GetHardwareAssists(uint32_t *hardwareAssists) override;
+    virtual kern_return_t SetHardwareAssists(uint32_t hardwareAssists) override;
+    virtual kern_return_t SetPromiscuousModeEnable(bool enable) override;
+    virtual kern_return_t SetMulticastAddresses(const IOUserNetworkMACAddress *addresses, uint32_t count) override;
+    virtual kern_return_t SetAllMulticastModeEnable(bool enable) override;
+    virtual kern_return_t SetWakeOnMagicPacketEnable(bool enable) override;
+    virtual kern_return_t SelectMediaType(IOUserNetworkMediaType mediaType) override;
+    virtual IOReturn getHardwareAddress(ether_addr_t *address) override;
+    virtual IOReturn setHardwareAddress(ether_addr_t *address) override;
+    virtual void TxPacketAvailable(OSAction *action) TYPE(IODataQueueDispatchSource::DataAvailable);
+    virtual void DrainTransmit() LOCALONLY;
+    virtual kern_return_t HandleClientMethod(IOUserClient *client, uint64_t selector, IOUserClientMethodArguments *arguments) LOCALONLY;
+    virtual kern_return_t AttachClient(IOUserClient *client) LOCALONLY;
+    virtual void DetachClient(IOUserClient *client) LOCALONLY;
+    virtual kern_return_t UpdateLink() LOCALONLY;
+    virtual kern_return_t FinishStop(IOService *provider) LOCALONLY;
+};
+
+#endif
