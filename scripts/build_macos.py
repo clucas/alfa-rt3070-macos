@@ -155,6 +155,7 @@ def main(argv=None):
         resources = contents / "Resources"
         (contents / "MacOS").mkdir(parents=True)
         resources.mkdir()
+        shutil.copyfile(ROOT / "macos/Packaging/AppIcon.icns", resources / "AppIcon.icns")
         driver = contents / "Library/SystemExtensions" / (driver_id + ".dext")
         if args.reuse_driver:
             reuse_driver(args.reuse_driver, driver, driver_id, team_id)

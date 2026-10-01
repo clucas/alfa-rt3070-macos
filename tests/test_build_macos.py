@@ -245,7 +245,8 @@ def test_driver_script_rejects_invalid_identity_before_compilation(tmp_path, var
 
 @pytest.mark.parametrize("signed,reuse", [(False, False), (True, False), (True, True)])
 def test_packaging_preserves_identity_licenses_and_reused_driver(tmp_path, monkeypatch, signed, reuse):
-    for relative in ("macos/Packaging/Info.plist", "macos/Packaging/Host.entitlements", "macos/Driver/Driver.entitlements"):
+    for relative in ("macos/Packaging/Info.plist", "macos/Packaging/Host.entitlements", "macos/Driver/Driver.entitlements",
+                     "macos/Packaging/AppIcon.icns"):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
