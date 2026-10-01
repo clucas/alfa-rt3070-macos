@@ -4,6 +4,8 @@ An experimental macOS app and DriverKit Ethernet driver for the ALFA AWUS036NEH 
 
 This repository publishes source code. It does not include a signed app, Apple provisioning profiles, signing certificates, or private keys. Building an app that can activate its network extension requires your own Apple Developer signing setup.
 
+Original project code is available under MIT, with explicit GPL-2.0-only exceptions for the two radio files adapted from upstream code. See [Sources and license](#sources-and-license) before reusing or distributing the software.
+
 ## Use the native app
 
 1. Open **ALFA Wi-Fi.app** from Applications with the USB adapter connected.
@@ -108,6 +110,20 @@ The repository ignores provisioning profiles, certificate/key files, local envir
 
 The RT3070 transport, firmware loader, calibration, and descriptors come from [wifit3](https://github.com/derv82/wifit3), pinned to commit `053645ff19a82b9aa8430c687cc502405e6afc4c`. Only its radio implementation is used. WPA2/CCMP uses the `cryptography` package. DriverKit packet-queue setup follows Apple's [Connecting a network driver](https://developer.apple.com/documentation/pcidriverkit/connecting-a-network-driver) sample; its license is in `macos/Driver/LICENSE.apple.txt`.
 
-The project source is GPL-2.0-only; see `LICENSE`. Dependencies retain their own licenses and are downloaded during setup rather than vendored here. The pinned `libusb-package` dependency declares Apache-2.0, which has a [GPL-2.0 compatibility issue](https://www.apache.org/licenses/GPL-compatibility.html) for combined redistribution. That dependency issue must be resolved before distributing a packaged application; this repository does not provide binary releases.
+Original project code, tests, and documentation are available under the [MIT License](LICENSE), except for the GPL-covered files listed below. The MIT grant does not relicense third-party material or code adapted from it.
+
+| Material | License |
+| --- | --- |
+| Original project code, tests, and documentation | [MIT](LICENSE) |
+| `src/alfa_rt3070/radio.py` and `src/alfa_rt3070/rx_reader.py`, which contain adaptations of GPL code | [GPL-2.0-only](LICENSES/GPL-2.0-only.txt); their source headers retain provenance notices |
+| Code adapted from Apple's network-driver sample | Apple's [MIT notice](macos/Driver/LICENSE.apple.txt), which must be preserved |
+| The `wifit3` dependency | GPL-2.0-only, under its upstream license |
+| Other dependencies | Their respective upstream licenses |
+
+The Python package includes both MIT and GPL-covered files, so its metadata declares `MIT AND GPL-2.0-only`. This is a combination of obligations, not a choice between two licenses. The app builder includes the project, GPL, and Apple notices in its resources.
+
+MIT permits reuse of the original components under its terms. Distribution of combined works incorporating the GPL-covered components must also comply with the applicable GPL terms; imports or separate processes do not by themselves remove those requirements. See [GPLv2 section 2](https://opensource.org/license/gpl-2.0) and the [FSF's guidance on permissively licensed modules](https://www.gnu.org/licenses/gpl-faq.en.html#GPLModuleLicense). This repository does not offer the combined application under MIT alone.
+
+Dependencies are downloaded during setup rather than vendored here. The pinned `libusb-package` dependency declares Apache-2.0, which has a [GPL-2.0 compatibility issue](https://www.apache.org/licenses/GPL-compatibility.html) for combined redistribution. Changing the license of the original project code does not resolve that dependency issue; it must be addressed before distributing a packaged application. This repository does not provide binary releases.
 
 Apple documents service priority in [Change the order of network services](https://support.apple.com/guide/mac-help/change-order-network-services-mac-mchlp2711/mac).

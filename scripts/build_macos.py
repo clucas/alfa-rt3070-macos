@@ -184,6 +184,8 @@ def main(argv=None):
             "-o", contents / "MacOS/AlfaWiFi")
         package_python(resources / "Python")
         shutil.copyfile(ROOT / "LICENSE", resources / "LICENSE")
+        shutil.copytree(ROOT / "LICENSES", resources / "LICENSES")
+        shutil.copyfile(ROOT / "macos/Driver/LICENSE.apple.txt", resources / "LICENSE.apple.txt")
         shutil.copyfile(ROOT / "README.md", resources / "README.md")
         for item in sorted((resources / "Python").rglob("*")):
             if item.is_file() and not item.is_symlink():

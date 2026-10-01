@@ -51,5 +51,6 @@ for key in CFBundleIdentifier IOMatchCategory IOUserServerName; do
     plutil -replace "IOKitPersonalities.AlfaEthernetDriver.$key" -string "$driver_id" "$destination/Info.plist"
 done
 cp "$driver_dir/LICENSE.apple.txt" "$destination/LICENSE.apple.txt"
+cp "$driver_dir/../../LICENSE" "$destination/LICENSE.project.txt"
 plutil -lint "$destination/Info.plist"
 echo "Built unsigned DriverKit bundle: $destination"

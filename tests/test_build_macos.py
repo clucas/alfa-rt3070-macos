@@ -224,6 +224,8 @@ def test_driver_script_uses_identity_in_compiler_and_all_matching_keys(tmp_path,
     actual = plistlib.loads((output / "Info.plist").read_bytes())
     expected = driver_info(host + ".Driver")
     assert actual == expected
+    assert (output / "LICENSE.project.txt").read_bytes() == (ROOT / "LICENSE").read_bytes()
+    assert (output / "LICENSE.apple.txt").read_bytes() == (ROOT / "macos/Driver/LICENSE.apple.txt").read_bytes()
     compiler_calls = [json.loads(line) for line in calls.read_text().splitlines() if '"clang++"' in line]
     assert len(compiler_calls) == 7
     for command in compiler_calls:
@@ -241,20 +243,49 @@ def test_driver_script_rejects_invalid_identity_before_compilation(tmp_path, var
     assert not output.exists()
 
 
-@pytest.mark.parametrize("signed", [False, True])
-def test_packaging_propagates_custom_identity_without_credentials(tmp_path, monkeypatch, signed):
+@pytest.mark.parametrize("signed,reuse", [(False, False), (True, False), (True, True)])
+def test_packaging_preserves_identity_licenses_and_reused_driver(tmp_path, monkeypatch, signed, reuse):
     for relative in ("macos/Packaging/Info.plist", "macos/Packaging/Host.entitlements", "macos/Driver/Driver.entitlements"):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
     (tmp_path / "macos/Host").mkdir()
     (tmp_path / "macos/Host/Placeholder.swift").touch()
-    (tmp_path / "LICENSE").write_text("test license")
+    (tmp_path / "LICENSE").write_text("project MIT license")
+    (tmp_path / "LICENSES").mkdir()
+    (tmp_path / "LICENSES/GPL-2.0-only.txt").write_text("GPL exception license")
+    (tmp_path / "macos/Driver/LICENSE.apple.txt").write_text("Apple MIT license")
     (tmp_path / "README.md").write_text("test readme")
     monkeypatch.setattr(build_macos, "ROOT", tmp_path)
     monkeypatch.setenv("ALFA_TEAM_ID", TEAM)
     driver_builds = []
     signed_bundles = {}
+    source = tmp_path / "existing.dext"
+    original_driver = None
+
+    def snapshot(directory):
+        result = {}
+        for item in directory.rglob("*"):
+            relative = str(item.relative_to(directory))
+            if item.is_symlink():
+                result[relative] = ("symlink", os.readlink(item))
+            elif item.is_file():
+                result[relative] = ("file", item.read_bytes(), item.stat().st_mode & 0o777)
+            else:
+                result[relative] = ("directory",)
+        return result
+
+    if reuse:
+        source.mkdir()
+        (source / "Info.plist").write_bytes(plistlib.dumps(driver_info()))
+        (source / "AlfaEthernetDriver").write_bytes(b"original signed driver")
+        (source / "AlfaEthernetDriver").chmod(0o755)
+        (source / "LICENSE.apple.txt").write_text("original Apple notice")
+        (source / "embedded.provisionprofile").write_bytes(b"original embedded profile")
+        (source / "_CodeSignature").mkdir()
+        (source / "_CodeSignature/CodeResources").write_bytes(b"original signature resources")
+        (source / "license-link").symlink_to("LICENSE.apple.txt")
+        original_driver = snapshot(source)
 
     def fake_run(*args, **kwargs):
         if str(args[0]).endswith("/Driver/build.sh"):
@@ -270,12 +301,22 @@ def test_packaging_propagates_custom_identity_without_credentials(tmp_path, monk
     def fake_sign(path, identity, entitlement=None):
         if entitlement:
             signed_bundles[path.suffix] = (identity, plistlib.loads(entitlement.read_bytes()))
+        if path.suffix == ".app":
+            resources = path / "Contents/Resources"
+            assert (resources / "LICENSE").read_text() == "project MIT license"
+            assert (resources / "LICENSES/GPL-2.0-only.txt").read_text() == "GPL exception license"
+            assert (resources / "LICENSE.apple.txt").read_text() == "Apple MIT license"
+
+    def fake_check_output(args, **kwargs):
+        if args[0] == "codesign":
+            return plistlib.dumps({"com.apple.application-identifier": TEAM + "." + DRIVER,
+                                  "com.apple.developer.team-identifier": TEAM})
+        return Path(args[-1]).read_bytes()
 
     monkeypatch.setattr(build_macos, "run", fake_run)
     monkeypatch.setattr(build_macos, "sign", fake_sign)
     monkeypatch.setattr(build_macos, "package_python", lambda destination: destination.mkdir())
-    monkeypatch.setattr(build_macos.subprocess, "check_output",
-                        lambda args, **kwargs: Path(args[-1]).read_bytes())
+    monkeypatch.setattr(build_macos.subprocess, "check_output", fake_check_output)
     args = ["--bundle-id", HOST]
     if signed:
         args += ["--identity", "Apple Development: Test", "--team-id", TEAM]
@@ -285,17 +326,31 @@ def test_packaging_propagates_custom_identity_without_credentials(tmp_path, monk
             path = tmp_path / (kind + ".profile")
             path.write_bytes(plistlib.dumps(profile(identifier, entitlements)))
             args += ["--" + kind.lower() + "-profile", str(path)]
+    if reuse:
+        args += ["--reuse-driver", str(source)]
     build_macos.main(args)
     contents = tmp_path / "build/ALFA Wi-Fi.app/Contents"
     info = plistlib.loads((contents / "Info.plist").read_bytes())
     assert info["CFBundleIdentifier"] == HOST
     assert info["ALFADriverIdentifier"] == DRIVER
     assert info["ALFAHasProvisioning"] is signed
-    assert (contents / "Library/SystemExtensions" / (DRIVER + ".dext")).is_dir()
-    assert len(driver_builds) == 1
-    assert driver_builds[0]["ALFA_HOST_BUNDLE_ID"] == HOST
-    assert driver_builds[0]["ALFA_TEAM_ID"] == (TEAM if signed else "UNCONFIGURED")
+    packaged_driver = contents / "Library/SystemExtensions" / (DRIVER + ".dext")
+    assert packaged_driver.is_dir()
+    if reuse:
+        assert not driver_builds
+        assert ".dext" not in signed_bundles
+        assert snapshot(source) == original_driver
+        assert snapshot(packaged_driver) == original_driver
+    else:
+        assert len(driver_builds) == 1
+        assert driver_builds[0]["ALFA_HOST_BUNDLE_ID"] == HOST
+        assert driver_builds[0]["ALFA_TEAM_ID"] == (TEAM if signed else "UNCONFIGURED")
+    assert (contents / "Resources/LICENSE").read_text() == "project MIT license"
+    assert (contents / "Resources/LICENSES/GPL-2.0-only.txt").read_text() == "GPL exception license"
+    assert (contents / "Resources/LICENSE.apple.txt").read_text() == "Apple MIT license"
     for suffix, identifier in ((".app", HOST), (".dext", DRIVER)):
+        if suffix == ".dext" and reuse:
+            continue
         identity, entitlements = signed_bundles[suffix]
         assert identity == ("Apple Development: Test" if signed else "-")
         if signed:

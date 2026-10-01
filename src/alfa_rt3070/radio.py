@@ -1,3 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Contains adaptations of wifit3's RT3070 driver and MAC routines,
+# commit 053645ff19a82b9aa8430c687cc502405e6afc4c, and Ralink's GPL LED_HALT sequence.
+# Modified for the ALFA macOS radio service on 2026-09-30.
+
 from __future__ import annotations
 
 import asyncio
